@@ -49,11 +49,13 @@ class DashboardController extends Controller
 
         
         $pengaduanBaru = Klien::whereDate('created_at', today())
-            ->when($user->role === 'teknisi', function ($query) use ($user) {
-                $query->whereHas('user', function ($subQuery) use ($user) {
-                    $subQuery->where('nama_instansi', $user->nama_instansi);
-                });
-            })->count();
+        ->where('status', 'menunggu') 
+        ->when($user->role === 'teknisi', function ($query) use ($user) {
+            $query->whereHas('user', function ($subQuery) use ($user) {
+                $subQuery->where('nama_instansi', $user->nama_instansi);
+            });
+        })->count();
+    
 
         $pengaduanDiproses = Klien::where('status', 'menunggu')
             ->when($user->role === 'teknisi', function ($query) use ($user) {
@@ -85,15 +87,18 @@ class DashboardController extends Controller
     public function pengaduanBaru()
     {
         $user = Auth::user();
-
+    
         $pengaduanBaru = Klien::whereDate('created_at', today())
+            ->where('status', 'menunggu') 
             ->when($user->role === 'teknisi', function ($query) use ($user) {
                 $query->whereHas('user', fn($q) => $q->where('nama_instansi', $user->nama_instansi));
-            })->latest()->get();
-
+            })
+            ->latest()
+            ->get();
+    
         return view('pengaduan_baru', compact('pengaduanBaru'));
     }
-
+    
     public function pengaduanDiproses()
     {
         $user = Auth::user();
